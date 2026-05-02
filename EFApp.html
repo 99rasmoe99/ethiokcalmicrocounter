@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ethiopian Feast • Compare Dishes & Macro Tracker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+      background: #fef7e8;
+      color: #2c1e12;
+      line-height: 1.5;
+      padding: 1rem;
+    }
+
+    header {
+      max-width: 1300px;
+      margin: 0 auto 2rem auto;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      letter-spacing: -0.3px;
+      background: linear-gradient(135deg, #b64516, #7a2e0a);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      margin: 1rem 0 1rem 0;
+    }
+
+    #filters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.65rem;
+      margin-bottom: 2rem;
+    }
+
+    .filter-btn {
+      background: #f0e2d0;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #5a3a28;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+      background: #c2491e;
+      color: white;
+      transform: scale(0.97);
+    }
+
+    .pulse {
+      animation: pulseAnim 0.5s ease-out;
+    }
+
+    @keyframes pulseAnim {
+      0% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    #searchInput {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      display: block;
+      padding: 0.9rem 1.2rem;
+      border-radius: 60px;
+      border: 1px solid #e2cfb5;
+      background: white;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    #searchInput:focus {
+      border-color: #c2491e;
+      box-shadow: 0 0 0 3px rgba(194,73,30,0.2);
+    }
+
+    main {
+      max-width: 1300px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* Comparison Panel Styles */
+    .comparison-panel {
+      background: white;
+      border-radius: 2rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      border: 1px solid #f1e4d4;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .comp-header {
+      background: #2c241a;
+      color: #fef2e6;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .comp-header h2 {
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .clear-comp-btn {
+      background: rgba(255,255,240,0.15);
+      border: none;
+      padding: 0.4rem 1rem;
+      border-radius: 40px;
+      color: #ffddb0;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+
+    .clear-comp-btn:hover {
+      background: #c2491e;
+      color: white;
+    }
+
+    .compare-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.5rem;
+    }
+
+    .compare-card {
+      flex: 1;
+      min-width: 240px;
+      background: #fffaf3;
+      border-radius: 1.5rem;
+      padding: 1rem;
+      border: 1px solid #efe0cf;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .compare-card.empty {
+      background: #fcf6ed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 260px;
+      gap: 0.8rem;
+      color: #b4875a;
+      border: 2px dashed #e2cfb5;
+    }
+
+    .compare-card.selected {
+      background: #fff2e5;
+      border-left: 6px solid #c2491e;
+    }
+
+    .comp-food-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #3b2618;
+      margin-bottom: 0.5rem;
+    }
+
+    .comp-macro-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin: 1rem 0;
+    }
+
+    .comp-macro-item {
+      background: #f3e8dd;
+      border-radius: 1rem;
+      padding: 0.5rem;
+      text-align: center;
+    }
+
+    .comp-macro-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: #7a522f;
+    }
+
+    .comp-macro-value {
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+
+    .comp-badge {
+      display: inline-block;
+      background: #e9d9ca;
+      padding: 0.2rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    .remove-comp {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #a85c2c;
+      float: right;
+      font-weight: bold;
+    }
+
+    .vs-divider {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: #e9d9ca;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 60px;
+      margin: auto 0;
+    }
+
+    @media (max-width: 720px) {
+      .compare-container { flex-direction: column; }
+      .vs-divider { align-self: center; margin: 0.5rem 0; }
+    }
+
+    #foodsList {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 1.8rem;
+    }
+
+    .food-card {
+      background: white;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      border: 1px solid #f3e5d8;
+    }
+
+    .food-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 28px -12px rgba(0,0,0,0.2);
+    }
+
+    .card-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: #e9dbc9;
+      display: block;
+    }
+
+    .card-info {
+      padding: 1.2rem;
+    }
+
+    .card-info h3 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      color: #3b2618;
+    }
+
+    .cal-badge {
+      background: #f9e0c8;
+      display: inline-block;
+      padding: 0.2rem 0.7rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #b64516;
+      margin-bottom: 0.7rem;
+    }
+
+    .macros {
+      font-size: 0.85rem;
+      display: flex;
+      gap: 1rem;
+      color: #6f4e34;
+      border-top: 1px solid #f0e2d2;
+      padding-top: 0.6rem;
+      margin-top: 0.4rem;
+    }
+
+    .health-score {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+      background: #e9e0d3;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    #meals {
+      background: #fff8ef;
+      border-radius: 2rem;
+      padding: 1.8rem 1.5rem;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+      border: 1px solid #f1e4d4;
+    }
+
+    #meals h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1.2rem;
+      color: #b64516;
+    }
+
+    .meal-block {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.8rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    .meal-block h3 {
+      font-size: 1.35rem;
+      border-left: 5px solid #c2491e;
+      padding-left: 0.8rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .meal-total {
+      font-weight: 600;
+      text-align: right;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      color: #7a3a1a;
+    }
+
+    .grand-total {
+      background: #e9d9ca;
+      display: inline-block;
+      padding: 0.6rem 1.4rem;
+      border-radius: 60px;
+      font-size: 1.4rem;
+      margin-top: 0.5rem;
+    }
+
+    .macro-summary-card {
+      background: #2c241a;
+      color: #fef2e6;
+      border-radius: 1.5rem;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .macro-item {
+      flex: 1;
+      text-align: center;
+      background: rgba(255,255,240,0.1);
+      border-radius: 1.2rem;
+      padding: 0.7rem;
+    }
+
+    .macro-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+
+    .macro-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .add-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.8rem;
+    }
+
+    .add-meal-btn {
+      background: #efe2d4;
+      border: none;
+      font-size: 0.7rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+
+    .add-meal-btn:hover {
+      background: #c2491e;
+      color: white;
+    }
+
+    .sort-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 20px 0 24px;
+      justify-content: flex-start;
+    }
+
+    .sort-bar button {
+      background: #2c241a;
+      color: #fef0e2;
+      padding: 8px 16px;
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      max-width: 600px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 2rem;
+      padding: 1.6rem;
+      position: relative;
+    }
+
+    #closeModal {
+      position: absolute;
+      right: 1.3rem;
+      top: 1rem;
+      font-size: 2rem;
+      cursor: pointer;
+      color: #6a3e24;
+    }
+
+    #recipeImage {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 1.2rem;
+      background: #d9c6b0;
+      margin-bottom: 1rem;
+    }
+
+    .macro-bars {
+      display: flex;
+      gap: 6px;
+      height: 10px;
+      margin: 8px 0;
+    }
+
+    .bar {
+      flex: 1;
+      border-radius: 10px;
+    }
+
+    .protein-bar { background: #4cc9f0; }
+    .carbs-bar   { background: #f9c74f; }
+    .fat-bar     { background: #f94144; }
+
+    @media (max-width: 720px) {
+      .macro-value { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div id="filters">
+    <button data-filter="all" class="filter-btn active">All</button>
+    <button data-filter="wot" class="filter-btn">Wot</button>
+    <button data-filter="tibs" class="filter-btn">Tibs</button>
+    <button data-filter="breakfast" class="filter-btn">Breakfast</button>
+    <button data-filter="snacks" class="filter-btn">Snacks</button>
+    <button data-filter="regional" class="filter-btn">Regional</button>
+    <button data-filter="modern" class="filter-btn">Modern</button>
+  </div>
+  <h1>🇪🇹 Ethiopian Feast • Compare & Track</h1>
+  <input type="text" id="searchInput" placeholder="Search dishes... Doro Wot, Tibs, Firfir...">
+</header>
+
+<main>
+  <!-- COMPARISON SECTION -->
+  <div class="comparison-panel">
+    <div class="comp-header">
+      <h2>⚖️ Dish Comparison</h2>
+      <button id="clearComparisonBtn" class="clear-comp-btn">Clear both</button>
+    </div>
+    <div id="compareContainer" class="compare-container">
+      <!-- dynamically filled comparison slots -->
+      <div class="compare-card empty" data-slot="0">
+        <span style="font-size: 2rem;">🍽️</span>
+        <span>Click on any dish ➕<br>to add to slot 1</span>
+      </div>
+      <div class="vs-divider">VS</div>
+      <div class="compare-card empty" data-slot="1">
+        <span style="font-size: 2rem;">🍛</span>
+        <span>Click on any dish ➕<br>to add to slot 2</span>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sort-bar">
+      <button data-sort="healthiest" id="sortHealthiest">🌿 Healthiest <span class="icon">↑</span></button>
+      <button data-sort="kcal" id="sortKcal">🔥 Lowest Kcal <span class="icon">↑</span></button>
+      <button data-sort="protein" id="sortProtein">💪 Highest Protein <span class="icon">↑</span></button>
+      <button data-sort="az" id="sortAZ">📖 A–Z <span class="icon">↑</span></button>
+    </div>
+    <div id="foodsList"></div>
+  </section>
+
+  <section id="meals">
+    <h2>🍽️ Your Daily Meals</h2>
+    <div class="macro-summary-card">
+      <div class="macro-item"><div class="macro-label">🔥 TOTAL CALORIES</div><div class="macro-value"><span id="totalKcalMacro">0</span> <span class="macro-unit">kcal</span></div></div>
+      <div class="macro-item"><div class="macro-label">💪 PROTEIN</div><div class="macro-value"><span id="totalProtein">0</span> <span class="macro-unit">g</span></div></div>
+      <div class="macro-item"><div class="macro-label">🍚 CARBS</div><div class="macro-value"><span id="totalCarbs">0</span> <span class="macro-unit">g</span></div></div>
+      <div class="macro-item"><div class="macro-label">🧈 FAT</div><div class="macro-value"><span id="totalFat">0</span> <span class="macro-unit">g</span></div></div>
+    </div>
+    <div class="meal-block"><h3>🌅 Breakfast</h3><ul id="breakfastList" class="meal-items"></ul><p class="meal-total">Total: <span id="breakfastTotal">0</span> kcal | 💪 <span id="breakfastProtein">0</span>g • 🍚 <span id="breakfastCarbs">0</span>g • 🧈 <span id="breakfastFat">0</span>g</p></div>
+    <div class="meal-block"><h3>☀️ Lunch</h3><ul id="lunchList" class="meal-items"></ul><p class="meal-total">Total: <span id="lunchTotal">0</span> kcal | 💪 <span id="lunchProtein">0</span>g • 🍚 <span id="lunchCarbs">0</span>g • 🧈 <span id="lunchFat">0</span>g</p></div>
+    <div class="meal-block"><h3>🌙 Dinner</h3><ul id="dinnerList" class="meal-items"></ul><p class="meal-total">Total: <span id="dinnerTotal">0</span> kcal | 💪 <span id="dinnerProtein">0</span>g • 🍚 <span id="dinnerCarbs">0</span>g • 🧈 <span id="dinnerFat">0</span>g</p></div>
+    <div class="meal-block"><h3>🍿 Snacks</h3><ul id="snacksList" class="meal-items"></ul><p class="meal-total">Total: <span id="snacksTotal">0</span> kcal | 💪 <span id="snacksProtein">0</span>g • 🍚 <span id="snacksCarbs">0</span>g • 🧈 <span id="snacksFat">0</span>g</p></div>
+    <div class="macro-bars" id="macroBarsSummary"><div class="bar protein-bar" style="width:33%"></div><div class="bar carbs-bar" style="width:33%"></div><div class="bar fat-bar" style="width:33%"></div></div>
+    <h2 class="grand-total">📆 Daily Total: <span id="dailyTotal">0</span> kcal</h2>
+  </section>
+</main>
+
+<div id="recipeModal" class="modal"><div class="modal-content"><span id="closeModal">&times;</span><img id="recipeImage" src=""><h2 id="recipeName"></h2><p><strong>Serving:</strong> <span id="recipeServing"></span></p><h3>🌿 Ingredients</h3><ul id="recipeIngredients"></ul><h3>📖 Instructions</h3><p id="recipeInstructions"></p></div></div>
+
+<script>
+  // Ethiopian food database (same as before, but compact)
+  const foodsDatabase = [
+    { "name": "Doro Wot", "calories": 450, "protein": 32, "carbs": 18, "fat": 25, "serving": "1 plate", "ingredients": ["Chicken", "Berbere", "Onions", "Niter Kibbeh", "Garlic", "Eggs"], "recipe": "Slow-cook onions, add berbere and niter kibbeh, simmer chicken, finish with boiled eggs.", "image": "https://i.ytimg.com/vi/K3cPwj7Jnmk/maxresdefault.jpg", "category": "wot" },
+    { "name": "Misir Wot", "calories": 320, "protein": 18, "carbs": 40, "fat": 8, "serving": "1 bowl", "ingredients": ["Red lentils", "Berbere", "Onions", "Garlic", "Niter Kibbeh"], "recipe": "Simmer lentils with sautéed onions, garlic, berbere, and spiced butter.", "image": "https://th.bing.com/th/id/OSK.69db2e0137577a2dbc6fde67e76afb25?w=424&h=424&c=7&rs=1&qlt=90&o=6&pid=16.1", "category": "wot" },
+    { "name": "Shiro Wot", "calories": 280, "protein": 12, "carbs": 34, "fat": 10, "serving": "1 bowl", "ingredients": ["Shiro powder", "Onions", "Garlic", "Niter Kibbeh"], "recipe": "Cook onions slowly, add shiro powder and water, simmer until thick.", "image": "https://holycowvegan.net/wp-content/uploads/2023/02/ethiopian-shiro-recipe-1.jpg", "category": "wot" },
+    { "name": "Kitfo", "calories": 520, "protein": 40, "carbs": 4, "fat": 38, "serving": "1 plate", "ingredients": ["Lean beef", "Niter Kibbeh", "Mitmita"], "recipe": "Mix minced beef with warm niter kibbeh and mitmita.", "image": "https://img.freepik.com/premium-photo/ethiopian-kifto-traditional-dish-present-ethiopian-cuisine-it-consists-raw-minced-meat_783571-748.jpg?w=2000", "category": "modern" },
+    { "name": "Gomen", "calories": 140, "protein": 5, "carbs": 12, "fat": 8, "serving": "1 cup", "ingredients": ["Collard greens", "Onions", "Garlic", "Niter Kibbeh"], "recipe": "Sauté onions and garlic, add chopped greens, steam until tender.", "image": "https://thumbs.dreamstime.com/z/bowl-gomen-ethiopian-food-closeup-view-bowl-gomen-280272324.jpg", "category": "wot" },
+    { "name": "Injera", "calories": 220, "protein": 6, "carbs": 46, "fat": 1, "serving": "1 large piece", "ingredients": ["Teff flour", "Water"], "recipe": "Ferment teff batter for 2–3 days, pour onto mitad, cook without flipping.", "image": "https://cdn.shopify.com/s/files/1/0148/1945/9126/articles/Injera_720x.jpg?v=1589810405", "category": "modern" },
+    { "name": "Dry Tibs", "calories": 380, "protein": 28, "carbs": 10, "fat": 24, "serving": "1 plate", "ingredients": ["Beef or lamb", "Onions", "Garlic", "Rosemary", "Oil"], "recipe": "Sear meat with onions, garlic, and rosemary until browned.", "image": "https://anbessa.travel/wp-content/uploads/2023/12/ethiopia-cultural-food-meat-tibs-1024x576.jpg", "category": "tibs" },
+    { "name": "Awaze Tibs", "calories": 410, "protein": 30, "carbs": 12, "fat": 26, "serving": "1 plate", "ingredients": ["Beef", "Awaze sauce", "Onions", "Garlic"], "recipe": "Sear beef, then toss in spicy awaze sauce.", "image": "https://www.chilipeppermadness.com/wp-content/uploads/2024/03/Awaze-Tibs-Recipe2-768x1152.jpg", "category": "tibs" },
+    { "name": "Firfir", "calories": 350, "protein": 10, "carbs": 42, "fat": 14, "serving": "1 plate", "ingredients": ["Injera", "Berbere", "Niter Kibbeh"], "recipe": "Tear injera into pieces and sauté with berbere and spiced butter.", "image": "https://ethiopian-food.org/wp-content/uploads/Firfir-2.jpg", "category": "breakfast" },
+    { "name": "Chechebsa", "calories": 420, "protein": 9, "carbs": 55, "fat": 18, "serving": "1 plate", "ingredients": ["Kita bread", "Niter Kibbeh", "Berbere", "Honey"], "recipe": "Tear fried flatbread and mix with spiced butter and berbere.", "image": "https://th.bing.com/th/id/R.b954bc6c95e2a3a796c113be40beaa81?rik=lm5Q5mUiEFcm%2bw&pid=ImgRaw&r=0", "category": "breakfast" },
+    { "name": "Genfo", "calories": 300, "protein": 8, "carbs": 50, "fat": 8, "serving": "1 bowl", "ingredients": ["Barley flour", "Water", "Niter Kibbeh", "Berbere"], "recipe": "Cook barley flour into a thick porridge and serve with spiced butter.", "image": "https://ethiopian-food.org/wp-content/uploads/2024/01/Genfo-01.jpg", "category": "breakfast" },
+    { "name": "Atakilt Wot", "calories": 180, "protein": 4, "carbs": 28, "fat": 6, "serving": "1 cup", "ingredients": ["Cabbage", "Carrots", "Potatoes", "Turmeric"], "recipe": "Simmer vegetables with turmeric and garlic.", "image": "https://nomnompaleo.com/wp-content/uploads/2020/02/800-IP-Atkilt-Hero-3.jpg", "category": "wot" },
+    { "name": "Alicha Wot", "calories": 260, "protein": 18, "carbs": 20, "fat": 12, "serving": "1 bowl", "ingredients": ["Beef", "Turmeric", "Onions", "Garlic"], "recipe": "Slow-cook beef with onions and turmeric.", "image": "https://th.bing.com/th/id/OSK.4b8913440c9ad9b96294d8e4c23df2a5?w=424&h=424&c=7&rs=1&qlt=90&o=6&pid=16.1", "category": "wot" },
+    { "name": "Sambusa", "calories": 180, "protein": 6, "carbs": 20, "fat": 8, "serving": "1 piece", "ingredients": ["Pastry", "Lentils or beef", "Spices"], "recipe": "Fill pastry with spiced filling and fry.", "image": "https://th.bing.com/th/id/OIP.k4m46HpgTh59FPScJOY5NwHaEc?w=280&h=180&c=7&r=0&o=7&pid=1.7&rm=3", "category": "snacks" },
+    { "name": "Foul", "calories": 300, "protein": 14, "carbs": 40, "fat": 10, "serving": "1 bowl", "ingredients": ["Fava beans", "Onions", "Tomatoes"], "recipe": "Mash beans and mix with vegetables.", "image": "https://i.ytimg.com/vi/jlCliBw6CmY/maxresdefault.jpg", "category": "modern" },
+    { "name": "Kinche", "calories": 260, "protein": 8, "carbs": 40, "fat": 8, "serving": "1 bowl", "ingredients": ["Cracked wheat", "Butter", "Salt"], "recipe": "Boil cracked wheat and mix with butter.", "image": "https://cdn.tasteatlas.com/images/dishes/4bffb0d04f134c20aa0ea08f7073e528.jpg?mw=1300", "category": "breakfast" },
+    { "name": "Dabo Kolo", "calories": 150, "protein": 3, "carbs": 28, "fat": 4, "serving": "1 handful", "ingredients": ["Flour", "Oil", "Spices"], "recipe": "Bake small spiced dough pieces.", "image": "https://th.bing.com/th/id/OIP.qFTEoF-ntKsv1ROKjJypRAHaEK?w=319&h=180&c=7&r=0&o=7&pid=1.7&rm=3", "category": "snacks" },
+    { "name": "Kolo", "calories": 130, "protein": 4, "carbs": 22, "fat": 3, "serving": "1 handful", "ingredients": ["Roasted barley", "Peanuts"], "recipe": "Roast barley and peanuts together.", "image": "https://c8.alamy.com/comp/W5C7MX/close-up-of-kolo-or-roasted-barley-debre-berhan-ethiopia-W5C7MX.jpg", "category": "snacks" },
+    { "name": "Ethiopian Pasta", "calories": 420, "protein": 12, "carbs": 70, "fat": 10, "serving": "1 plate", "ingredients": ["Pasta", "Tomato sauce", "Spices"], "recipe": "Cook pasta and mix with spiced tomato sauce.", "image": "https://i.ytimg.com/vi/rdBEBtZt_yw/maxresdefault.jpg", "category": "modern" },
+    { "name": "Fatira", "calories": 480, "protein": 12, "carbs": 60, "fat": 20, "serving": "1 plate", "ingredients": ["Flour", "Eggs", "Honey"], "recipe": "Fry dough and top with eggs and honey.", "image": "https://tse2.mm.bing.net/th/id/OIP.tYaGVJ6S2kcnuQcLK096AQHaIl?rs=1&pid=ImgDetMain&o=7&rm=3", "category": "breakfast" },
+    { "name": "Kik Alicha", "calories": 240, "protein": 14, "carbs": 32, "fat": 4, "serving": "1 bowl", "ingredients": ["Split peas", "Turmeric", "Onions"], "recipe": "Simmer split peas with turmeric and onions.", "image": "https://th.bing.com/th?&id=OVP.cUB-E3YCKjPs7sR3s7k49gHgFo&w=313&h=175&c=7&rs=1", "category": "wot" },
+    { "name": "Yetsom Beyaynetu", "calories": 600, "protein": 20, "carbs": 80, "fat": 18, "serving": "1 platter", "ingredients": ["Injera", "Various wots", "Vegetables"], "recipe": "Mixed platter of fasting dishes on injera.", "image": "https://th.bing.com/th?&id=OVP.y2ikDm_R6eh9sN2M8c8xaAHgFo&w=313&h=175&c=7&rs=1", "category": "wot" }
+  ];
+
+  // Comparison state: two slots (0 and 1)
+  let comparisonSlots = [null, null];
+  let meals = { breakfast: [], lunch: [], dinner: [], snacks: [] };
+  let currentFilter = "all", searchTerm = "", sortType = "none";
+
+  function healthScore(item) { let s=80; if(item.calories>600) s-=20; s+=item.protein*0.6; s-=item.fat*0.5; return Math.min(100,Math.max(10,Math.round(s))); }
+
+  // Render comparison panel based on slots
+  function renderComparison() {
+    const container = document.getElementById('compareContainer');
+    container.innerHTML = `
+      <div class="compare-card ${comparisonSlots[0] ? 'selected' : 'empty'}" data-slot="0">
+        ${comparisonSlots[0] ? `
+          <button class="remove-comp" data-slot="0">✕</button>
+          <div class="comp-food-name">${comparisonSlots[0].name}</div>
+          <div class="comp-macro-grid">
+            <div class="comp-macro-item"><div class="comp-macro-label">🔥 kcal</div><div class="comp-macro-value">${comparisonSlots[0].calories}</div></div>
+            <div class="comp-macro-item"><div class="comp-macro-label">💪 Protein</div><div class="comp-macro-value">${comparisonSlots[0].protein}g</div></div>
+            <div class="comp-macro-item"><div class="comp-macro-label">🍚 Carbs</div><div class="comp-macro-value">${comparisonSlots[0].carbs}g</div></div>
+            <div class="comp-macro-item"><div class="comp-macro-label">🧈 Fat</div><div class="comp-macro-value">${comparisonSlots[0].fat}g</div></div>
+          </div>
+          <div class="comp-badge">🌿 Health: ${healthScore(comparisonSlots[0])}</div>
+        ` : `<span style="font-size:2rem;">🍽️</span><span>Click any dish ➕<br>to add slot 1</span>`}
+      </div>
+      <div class="vs-divider">VS</div>
+      <div class="compare-card ${comparisonSlots[1] ? 'selected' : 'empty'}" data-slot="1">
+        ${comparisonSlots[1] ? `
+          <button class="remove-comp" data-slot="1">✕</button>
+          <div class="comp-food-name">${comparisonSlots[1].name}</div>
+          <div class="comp-macro-grid">
+            <div class="comp-macro-item"><div class="comp-macro-label">🔥 kcal</div><div class="comp-macro-value">${comparisonSlots[1].calories}</div></div>
+            <div class="comp-macro-item"><div class="comp-macro-label">💪 Protein</div><div class="comp-macro-value">${comparisonSlots[1].protein}g</div></div>
+            <div class="comp-macro-item"><div class="comp-macro-label">🍚 Carbs</div><div class="comp-macro-value">${comparisonSlots[1].carbs}g</div></div>
+            <div class="comp-macro-item"><div class="comp-macro-label">🧈 Fat</div><div class="comp-macro-value">${comparisonSlots[1].fat}g</div></div>
+          </div>
+          <div class="comp-badge">🌿 Health: ${healthScore(comparisonSlots[1])}</div>
+        ` : `<span style="font-size:2rem;">🍛</span><span>Click any dish ➕<br>to add slot 2</span>`}
+      </div>
+    `;
+    // attach remove handlers
+    document.querySelectorAll('.remove-comp').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const slot = parseInt(btn.dataset.slot);
+        comparisonSlots[slot] = null;
+        renderComparison();
+      });
+    });
+    // attach click to empty cards to add (they have data-slot)
+    document.querySelectorAll('.compare-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if(e.target.classList.contains('remove-comp')) return;
+        const slot = parseInt(card.dataset.slot);
+        if(comparisonSlots[slot] === null) {
+          alert(`Click on any dish from the list below to add to comparison slot ${slot+1}`);
+        }
+      });
+    });
+  }
+
+  function addToComparison(food) {
+    if(comparisonSlots[0] === null) {
+      comparisonSlots[0] = food;
+      renderComparison();
+    } else if(comparisonSlots[1] === null) {
+      comparisonSlots[1] = food;
+      renderComparison();
+    } else {
+      alert("Both comparison slots are full! Clear one to add a new dish.");
+    }
+  }
+
+  function clearComparison() { comparisonSlots = [null, null]; renderComparison(); }
+
+  // MEALS (fully functional)
+  function saveMeals() { localStorage.setItem("ethiopian_meals", JSON.stringify(meals)); }
+  function loadMealsFromStorage() { const s=localStorage.getItem("ethiopian_meals"); if(s) meals={breakfast:[],lunch:[],dinner:[],snacks: [], ...JSON.parse(s)}; updateAllMealUI(); }
+  function addToMeal(food, cat) { meals[cat].push({...food}); saveMeals(); updateAllMealUI(); animateTotal(cat); }
+  function removeFromMeal(cat, idx) { meals[cat].splice(idx,1); saveMeals(); updateAllMealUI(); }
+  function computeTotal(arr){return arr.reduce((s,i)=>s+(i.calories||0),0);}
+  function computeMacroSum(arr){return arr.reduce((acc,i)=>{acc.protein+=i.protein||0; acc.carbs+=i.carbs||0; acc.fat+=i.fat||0; return acc;},{protein:0,carbs:0,fat:0});}
+  function updateAllMealUI() {
+    const cats=['breakfast','lunch','dinner','snacks'];
+    cats.forEach(cat=>{
+      const items=meals[cat];
+      const list=document.getElementById(`${cat}List`);
+      list.innerHTML=items.map((item,idx)=>`<li class="meal-item"><span class="meal-item-name">${item.name}</span><div><span class="meal-item-kcal">${item.calories} kcal</span><button class="remove-meal" data-cat="${cat}" data-idx="${idx}">✕</button></div></li>`).join('');
+      list.querySelectorAll('.remove-meal').forEach(btn=>btn.addEventListener('click',(e)=>{removeFromMeal(btn.dataset.cat,parseInt(btn.dataset.idx));}));
+      document.getElementById(`${cat}Total`).innerText=computeTotal(meals[cat]);
+      const m=computeMacroSum(meals[cat]);
+      document.getElementById(`${cat}Protein`).innerText=m.protein;
+      document.getElementById(`${cat}Carbs`).innerText=m.carbs;
+      document.getElementById(`${cat}Fat`).innerText=m.fat;
+    });
+    const totalKcal=cats.reduce((s,c)=>s+computeTotal(meals[c]),0);
+    document.getElementById('dailyTotal').innerText=totalKcal;
+    const totalMacros=cats.reduce((acc,cat)=>{const m=computeMacroSum(meals[cat]); acc.protein+=m.protein; acc.carbs+=m.carbs; acc.fat+=m.fat; return acc;},{protein:0,carbs:0,fat:0});
+    document.getElementById('totalKcalMacro').innerText=totalKcal;
+    document.getElementById('totalProtein').innerText=totalMacros.protein;
+    document.getElementById('totalCarbs').innerText=totalMacros.carbs;
+    document.getElementById('totalFat').innerText=totalMacros.fat;
+    const maxMacro=Math.max(totalMacros.protein,totalMacros.carbs,totalMacros.fat,1);
+    document.getElementById('macroBarsSummary').innerHTML=`<div class="bar protein-bar" style="width:${(totalMacros.protein/maxMacro)*100}%"></div><div class="bar carbs-bar" style="width:${(totalMacros.carbs/maxMacro)*100}%"></div><div class="bar fat-bar" style="width:${(totalMacros.fat/maxMacro)*100}%"></div>`;
+  }
+  function animateTotal(cat){const el=document.getElementById(`${cat}Total`); if(el) el.classList.add('pulse'); setTimeout(()=>el?.classList.remove('pulse'),400);}
+
+  // FOOD LIST rendering with comparison add hook
+  function renderFoodCards() {
+    let filtered = foodsDatabase.filter(f => (currentFilter==='all'||f.category===currentFilter) && f.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    if(sortType==='healthiest') filtered.sort((a,b)=>healthScore(b)-healthScore(a));
+    else if(sortType==='kcal') filtered.sort((a,b)=>a.calories-b.calories);
+    else if(sortType==='protein') filtered.sort((a,b)=>b.protein-a.protein);
+    else if(sortType==='az') filtered.sort((a,b)=>a.name.localeCompare(b.name));
+    const container=document.getElementById('foodsList');
+    if(filtered.length===0){container.innerHTML='<div style="text-align:center;padding:3rem;">🍽️ No matches.</div>'; return;}
+    container.innerHTML=filtered.map(food=>`
+      <div class="food-card" data-foodname="${food.name}">
+        <img class="card-img" src="${food.image}" onerror="this.src='https://placehold.co/600x400/e2cfb5/5a2e1a?text=Ethiopian+Food'">
+        <div class="card-info"><h3>${food.name}</h3><span class="cal-badge">🔥 ${food.calories} kcal</span><div class="macros"><span>💪 ${food.protein}g</span><span>🍚 ${food.carbs}g</span><span>🧈 ${food.fat}g</span></div><div class="health-score">🌿 Health: ${healthScore(food)}</div><div class="add-buttons"><button class="add-meal-btn" data-meal="breakfast">🌅 Breakfast</button><button class="add-meal-btn" data-meal="lunch">☀️ Lunch</button><button class="add-meal-btn" data-meal="dinner">🌙 Dinner</button><button class="add-meal-btn" data-meal="snacks">🍿 Snacks</button><button class="add-meal-btn compare-btn" style="background:#cfa668;">⚖️ Compare</button></div></div>
+      </div>
+    `).join('');
+    document.querySelectorAll('.food-card').forEach(card=>{
+      const foodName=card.dataset.foodname;
+      const foodObj=foodsDatabase.find(f=>f.name===foodName);
+      card.querySelectorAll('.add-meal-btn').forEach(btn=>{
+        if(btn.classList.contains('compare-btn')) {
+          btn.addEventListener('click',(e)=>{e.stopPropagation(); addToComparison(foodObj);});
+        } else {
+          btn.addEventListener('click',(e)=>{e.stopPropagation(); addToMeal(foodObj, btn.dataset.meal);});
+        }
+      });
+      card.addEventListener('click',(e)=>{if(!e.target.classList.contains('add-meal-btn')) openModal(foodObj);});
+    });
+  }
+
+  function openModal(food){const modal=document.getElementById('recipeModal'); document.getElementById('recipeImage').src=food.image; document.getElementById('recipeName').innerText=food.name; document.getElementById('recipeServing').innerText=food.serving; document.getElementById('recipeIngredients').innerHTML=food.ingredients.map(i=>`<li>${i}</li>`).join(''); document.getElementById('recipeInstructions').innerText=food.recipe; modal.style.display='flex';}
+  function closeModal(){document.getElementById('recipeModal').style.display='none';}
+  function initEventListeners(){
+    document.querySelectorAll('.filter-btn').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentFilter=btn.dataset.filter; renderFoodCards();}));
+    document.getElementById('searchInput').addEventListener('input',e=>{searchTerm=e.target.value; renderFoodCards();});
+    document.getElementById('sortHealthiest').addEventListener('click',e=>{sortType='healthiest'; renderFoodCards();});
+    document.getElementById('sortKcal').addEventListener('click',e=>{sortType='kcal'; renderFoodCards();});
+    document.getElementById('sortProtein').addEventListener('click',e=>{sortType='protein'; renderFoodCards();});
+    document.getElementById('sortAZ').addEventListener('click',e=>{sortType='az'; renderFoodCards();});
+    document.getElementById('clearComparisonBtn').addEventListener('click',clearComparison);
+    window.onclick=e=>{if(e.target===document.getElementById('recipeModal')) closeModal();};
+    document.getElementById('closeModal').onclick=closeModal;
+  }
+
+  loadMealsFromStorage();
+  initEventListeners();
+  renderComparison();
+  renderFoodCards();
+</script>
+</body>
+</html>
